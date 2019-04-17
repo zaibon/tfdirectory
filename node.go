@@ -6,22 +6,22 @@ import (
 )
 
 type Resource struct {
-	CRU int64 `json:"cru" bson:"cru"`
-	MRU int64 `json:"mru" bson:"mru"`
-	SRU int64 `json:"sru" bson:"sru"`
-	HRU int64 `json:"hru" bson:"hru"`
+	CRU float64 `json:"cru" bson:"cru"`
+	MRU float64 `json:"mru" bson:"mru"`
+	SRU float64 `json:"sru" bson:"sru"`
+	HRU float64 `json:"hru" bson:"hru"`
 }
 
 type Location struct {
 	Continent string  `json:"continent" bson:"continent"`
 	Country   string  `json:"contry" bson:"contry"`
 	City      string  `json:"city" bson:"city"`
-	Latitude  float32 `json:"latitude" bson:"latitude"`
-	Longitude float32 `json:"longitude" bson:"longitude"`
+	Latitude  float64 `json:"latitude" bson:"latitude"`
+	Longitude float64 `json:"longitude" bson:"longitude"`
 }
 
 type Node struct {
-	NodeID           string    `json:"node_id" bson:"node_id"`
+	NodeID           string    `json:"node_id" bson:"_id"`
 	OSVersion        string    `json:"os_version" bson:"os_version"`
 	RobotURL         string    `json:"robot_address" bson:"robot_address"`
 	TotalResources   *Resource `json:"total_resources" bson:"total_resources"`

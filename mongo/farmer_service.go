@@ -71,7 +71,7 @@ func (fs *FarmerService) Update(ctx context.Context, farmer *tfdirectory.Farmer)
 func (fs *FarmerService) GetByID(ctx context.Context, ID string) (*tfdirectory.Farmer, error) {
 	var farmer tfdirectory.Farmer
 	result := fs.collection.FindOne(ctx, bson.M{
-		"iyo_organization": ID,
+		"_id": ID,
 	})
 	if err := result.Err(); err != nil {
 		return nil, err

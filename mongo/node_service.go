@@ -50,7 +50,7 @@ func (n *NodeService) Register(ctx context.Context, node *tfdirectory.Node) erro
 func (n *NodeService) GetByID(ctx context.Context, ID string) (*tfdirectory.Node, error) {
 	var node tfdirectory.Node
 	result := n.collection.FindOne(ctx, bson.M{
-		"node_id": ID,
+		"_id": ID,
 	})
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (n *NodeService) updateResource(ctx context.Context, ID string, resourceTyp
 		return fmt.Errorf("can only update reserved_resources or used_resources, not %s", resourceType)
 	}
 
-	filter := bson.D{{"node_id", ID}}
+	filter := bson.D{{"_id", ID}}
 	update := bson.D{
 		{"$set", bson.D{
 			{fmt.Sprintf("%s.cru", string(resourceType)), resource.CRU},

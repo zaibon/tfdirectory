@@ -6,7 +6,7 @@ import (
 
 type Farmer struct {
 	Email        string   `json:"email" bson:"email"`
-	Organization string   `json:"iyo_organization" bson:"iyo_organization"`
+	Organization string   `json:"iyo_organization" bson:"_id"`
 	Name         string   `json:"name" bson:"name"`
 	WalletAddrs  []string `json:"wallet_addresses" bson:"wallet_addresses"`
 }
