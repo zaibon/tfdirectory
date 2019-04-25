@@ -34,6 +34,7 @@ func createTestNode() *tfdirectory.Node {
 		RobotURL:  "http://localhost:6600",
 		Location: &tfdirectory.Location{
 			City:      "liege",
+			Country:   "belgium",
 			Continent: "europe",
 			Latitude:  5.12,
 			Longitude: 23.4,
@@ -73,7 +74,7 @@ func TestInsertAndSearch(t *testing.T) {
 	t.Run("search", func(t *testing.T) {
 		nodes, err := nodeSrv.Search(ctx, tfdirectory.NodeQuery{})
 		require.NoError(err)
-		assert.Equal(t, 1, len(nodes))
+		require.Equal(1, len(nodes))
 		nodes[0].Created = node.Created
 		nodes[0].Updated = node.Updated
 		assert.EqualValues(t, node, nodes[0])
@@ -93,6 +94,30 @@ func TestInsertAndSearch(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		_, err = nodeSrv.GetByID(ctx, "notfound")
 		assert.Error(t, err)
+	})
+
+	t.Run("search by farm", func(t *testing.T) {
+		nodes, err := nodeSrv.Search(ctx, tfdirectory.NodeQuery{
+			Farmer: "test_farm",
+		})
+		require.NoError(err)
+		require.Equal(1, len(nodes))
+		nodes[0].Created = node.Created
+		nodes[0].Updated = node.Updated
+		assert.EqualValues(t, node, nodes[0])
+	})
+
+	t.Run("search by country", func(t *testing.T) {
+		nodes, err := nodeSrv.Search(ctx, tfdirectory.NodeQuery{
+			Location: tfdirectory.Location{
+				Country: "belgium",
+			},
+		})
+		require.NoError(err)
+		require.Equal(1, len(nodes))
+		nodes[0].Created = node.Created
+		nodes[0].Updated = node.Updated
+		assert.EqualValues(t, node, nodes[0])
 	})
 }
 

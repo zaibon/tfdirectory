@@ -64,7 +64,26 @@ func (n *NodeService) Search(ctx context.Context, query tfdirectory.NodeQuery) (
 	nodes := make([]*tfdirectory.Node, 0, 10)
 
 	// TODO: convert query to valid mongodb filter
-	cur, err := n.collection.Find(ctx, bson.D{})
+	q := bson.D{}
+	if query.Farmer != "" {
+		q = append(q, bson.E{"farmer", query.Farmer})
+	}
+	if query.Location.Country != "" {
+		q = append(q, bson.E{"location.country", query.Location.Country})
+	}
+	if query.Resource.CRU != 0 {
+		q = append(q, bson.E{"total_resources.cru", bson.D{{"$gte", query.Resource.CRU}}})
+	}
+	if query.Resource.MRU != 0 {
+		q = append(q, bson.E{"total_resources.mru", bson.D{{"$gte", query.Resource.MRU}}})
+	}
+	if query.Resource.HRU != 0 {
+		q = append(q, bson.E{"total_resources.hru", bson.D{{"$gte", query.Resource.HRU}}})
+	}
+	if query.Resource.SRU != 0 {
+		q = append(q, bson.E{"total_resources.sru", bson.D{{"$gte", query.Resource.SRU}}})
+	}
+	cur, err := n.collection.Find(ctx, q)
 	if err != nil {
 		return nil, err
 	}

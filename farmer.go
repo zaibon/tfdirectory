@@ -8,6 +8,7 @@ type Farmer struct {
 	Email        string   `json:"email" bson:"email"`
 	Organization string   `json:"iyo_organization" bson:"_id"`
 	Name         string   `json:"name" bson:"name"`
+	Location     Location `json:"location" bson:"location"`
 	WalletAddrs  []string `json:"wallet_addresses" bson:"wallet_addresses"`
 }
 

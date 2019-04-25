@@ -17,8 +17,8 @@ type farmerRouter struct {
 func NewFarmerRouter(service tfdirectory.FarmerService, router *mux.Router) *mux.Router {
 	farmerRouter := &farmerRouter{service}
 
-	router.HandleFunc("/", farmerRouter.createFarmerHandler).Methods("PUT")
-	router.HandleFunc("/", farmerRouter.ListFarmerHandler).Methods("GET")
+	router.HandleFunc("", farmerRouter.createFarmerHandler).Methods("PUT")
+	router.HandleFunc("", farmerRouter.ListFarmerHandler).Methods("GET")
 	router.HandleFunc("/{node_id}", farmerRouter.getFarmerHandler).Methods("GET")
 	return router
 }

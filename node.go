@@ -14,7 +14,7 @@ type Resource struct {
 
 type Location struct {
 	Continent string  `json:"continent" bson:"continent"`
-	Country   string  `json:"contry" bson:"contry"`
+	Country   string  `json:"country" bson:"country"`
 	City      string  `json:"city" bson:"city"`
 	Latitude  float64 `json:"latitude" bson:"latitude"`
 	Longitude float64 `json:"longitude" bson:"longitude"`
@@ -30,7 +30,7 @@ type Node struct {
 	Location         *Location `json:"location" bson:"location"`
 	Uptime           int64     `json:"uptime" bson:"uptime"`
 
-	FarmerID string `json:"farmer_id" bson:"farmer_id"`
+	FarmerID string `json:"farmer_id" bson:"farmer"`
 
 	Parameters []string `json:"parameters" bson:"parameters"`
 
@@ -39,8 +39,9 @@ type Node struct {
 }
 
 type NodeQuery struct {
-	location Location
-	resource Resource
+	Location Location
+	Resource Resource
+	Farmer   string
 }
 
 type NodeService interface {
