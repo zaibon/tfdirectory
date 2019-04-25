@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -17,8 +19,12 @@ type Server struct {
 	router *mux.Router
 }
 
+const staticDir = "/static"
+
+var indexPage []byte
+
 func NewServer(n tfdirectory.NodeService, f tfdirectory.FarmerService) *Server {
-	r := mux.NewRouter()
+	r := mux.NewRouter().StrictSlash(true)
 	srv := &http.Server{
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
@@ -29,20 +35,41 @@ func NewServer(n tfdirectory.NodeService, f tfdirectory.FarmerService) *Server {
 		router: r,
 		srv:    srv,
 	}
-	NewUserRouter(n, s.newSubrouter("/nodes"))
-	NewFarmerRouter(f, s.newSubrouter("/farmers"))
+
+	// create API routes
+	r.Use(handlers.CompressHandler)
+	r.Use(func(h http.Handler) http.Handler {
+		return handlers.LoggingHandler(os.Stdout, h)
+	})
+	r.Use(handlers.RecoveryHandler())
+
+	apiRouter := s.router.PathPrefix("/api").Subrouter()
+	apiRouter.Use(handlers.CORS())
+	NewUserRouter(n, apiRouter.PathPrefix("/nodes").Subrouter())
+	NewFarmerRouter(f, apiRouter.PathPrefix("/farmers").Subrouter())
+
+	// var err error
+	// indexPage, err = ioutil.ReadFile("static/index.html")
+	// if err != nil {
+	// 	log.Fatalf("cannot load index page: %v\n", err)
+	// }
+
+	// create static file route
+	r.PathPrefix(staticDir).Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		indexPage, err = ioutil.ReadFile("static/index.html")
+		if err != nil {
+			http.Error(w, fmt.Sprintf("cannot load index page: %v\n", err), http.StatusInternalServerError)
+		}
+		w.Write(indexPage)
+	})
 	return &s
 }
 
 // Start starts the server and make it listen to listen address
 func (s *Server) Start(listen string) {
 	log.Printf("Listening on %s\n", listen)
-
-	s.router.Use(handlers.CompressHandler)
-	s.router.Use(func(h http.Handler) http.Handler {
-		return handlers.LoggingHandler(os.Stdout, h)
-	})
-	s.router.Use(handlers.RecoveryHandler())
 
 	s.srv.Addr = listen
 	go func() {
@@ -54,8 +81,4 @@ func (s *Server) Start(listen string) {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.srv.Shutdown(ctx)
-}
-
-func (s *Server) newSubrouter(path string) *mux.Router {
-	return s.router.PathPrefix(path).Subrouter()
 }

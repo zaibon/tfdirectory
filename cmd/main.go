@@ -39,14 +39,24 @@ func main() {
 	// Create a deadline to wait for the http server to stop.
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
+	cErr := make(chan error, 1)
 
-	go func() {
+	go func(<-chan error) {
 		log.Println("shutting down")
-		s.Shutdown(ctx)
-	}()
+		cErr <- s.Shutdown(ctx)
+	}(cErr)
 
-	<-ctx.Done()
+	select {
+	case <-ctx.Done():
+		log.Printf("timeout reached for server shutdown")
+		os.Exit(1)
+	case err := <-cErr:
+		if err != nil {
+			log.Printf("error during shutdown: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	log.Println("server is shutdown")
-
 	os.Exit(0)
 }
