@@ -46,7 +46,7 @@ func (fs *FarmerService) Insert(ctx context.Context, farmer *tfdirectory.Farmer)
 }
 
 func (fs *FarmerService) Update(ctx context.Context, farmer *tfdirectory.Farmer) error {
-	filter := bson.D{{"iyo_organization", farmer.Organization}}
+	filter := bson.D{{"_id", farmer.Organization}}
 	update := bson.D{
 		{"$set", bson.D{
 			{"email", farmer.Email},
@@ -59,8 +59,8 @@ func (fs *FarmerService) Update(ctx context.Context, farmer *tfdirectory.Farmer)
 	if err != nil {
 		return err
 	}
-	if updateResult.ModifiedCount < 1 {
-		return fmt.Errorf("node not found")
+	if updateResult.MatchedCount < 1 {
+		return fmt.Errorf("farmer not found")
 	}
 	if updateResult.ModifiedCount > 1 {
 		panic(fmt.Sprintf("multiple node match on farmer organization (%s), should never happen", farmer.Organization))

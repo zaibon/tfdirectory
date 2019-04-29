@@ -42,6 +42,7 @@ func NewServer(n tfdirectory.NodeService, f tfdirectory.FarmerService) *Server {
 		return handlers.LoggingHandler(os.Stdout, h)
 	})
 	r.Use(handlers.RecoveryHandler())
+	r.Use(ExtractScopeMiddleware)
 
 	apiRouter := s.router.PathPrefix("/api").Subrouter()
 	apiRouter.Use(handlers.CORS())

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -17,16 +18,30 @@ type farmerRouter struct {
 func NewFarmerRouter(service tfdirectory.FarmerService, router *mux.Router) *mux.Router {
 	farmerRouter := &farmerRouter{service}
 
-	router.HandleFunc("", farmerRouter.createFarmerHandler).Methods("PUT")
+	router.HandleFunc("", farmerRouter.createFarmerHandler).Methods("POST")
+	router.HandleFunc("/{organization}", farmerRouter.updateFarmerHandler).Methods("PUT")
 	router.HandleFunc("", farmerRouter.ListFarmerHandler).Methods("GET")
-	router.HandleFunc("/{node_id}", farmerRouter.getFarmerHandler).Methods("GET")
+	router.HandleFunc("/{organization}", farmerRouter.getFarmerHandler).Methods("GET")
 	return router
 }
 
 func (nr *farmerRouter) createFarmerHandler(w http.ResponseWriter, r *http.Request) {
+	scope := ScopeFromContext(r.Context())
+	if len(scope) < 1 {
+		Error(w, http.StatusUnauthorized, "missing required scope")
+		return
+	}
+
 	farmer, err := decodeFarmer(r)
 	if err != nil {
 		Error(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if !isSubset(scope, []string{
+		fmt.Sprintf("user:memberof:%s", farmer.Organization),
+	}) {
+		Error(w, http.StatusUnauthorized, "missing required scope")
 		return
 	}
 
@@ -39,9 +54,46 @@ func (nr *farmerRouter) createFarmerHandler(w http.ResponseWriter, r *http.Reque
 	Json(w, http.StatusOK, err)
 }
 
+func (nr *farmerRouter) updateFarmerHandler(w http.ResponseWriter, r *http.Request) {
+	scope := ScopeFromContext(r.Context())
+	if len(scope) < 1 {
+		Error(w, http.StatusUnauthorized, "missing required scope")
+		return
+	}
+
+	farmer, err := decodeFarmer(r)
+	if err != nil {
+		Error(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	vars := mux.Vars(r)
+	org := vars["organization"]
+
+	if farmer.Organization != org {
+		Error(w, http.StatusBadRequest, "cannot modify the organization of a farm")
+		return
+	}
+
+	if !isSubset(scope, []string{
+		fmt.Sprintf("user:memberof:%s", org),
+	}) {
+		Error(w, http.StatusUnauthorized, "missing required scope")
+		return
+	}
+
+	err = nr.service.Update(context.TODO(), &farmer)
+	if err != nil {
+		Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	Json(w, http.StatusOK, farmer)
+}
+
 func (nr *farmerRouter) getFarmerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	org := vars["iyo_organization"]
+	org := vars["organization"]
 
 	farmer, err := nr.service.GetByID(context.TODO(), org)
 	if err != nil {
